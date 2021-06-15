@@ -14,7 +14,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     private var mDrawPaint : Paint? = null
     private var mCanvasPaint : Paint? = null
     private var mBrushSize: Float = 0.toFloat()
-    private var color = Color.MAGENTA
+    private var color = Color.BLACK
     private var canvas: Canvas? = null
     private var mPaths = ArrayList<CustomPath>()
 
@@ -99,6 +99,11 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         //set brush size accordingly to display of the device
         mBrushSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, newSize, resources.displayMetrics)
         mDrawPaint!!.strokeWidth = newSize
+    }
+
+    fun setColor(newColor: String) {
+        color = Color.parseColor(newColor)
+        mDrawPaint!!.color = color
     }
 
 
