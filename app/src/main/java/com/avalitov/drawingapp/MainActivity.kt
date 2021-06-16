@@ -1,21 +1,27 @@
 package com.avalitov.drawingapp
 
 import android.Manifest
+import android.app.Activity
 import android.app.Dialog
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.View
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
+import java.lang.Exception
 
 lateinit var drawingView : DrawingView
 lateinit var ibBrush : ImageButton
 lateinit var ibGallery : ImageButton
+lateinit var ivBackground : ImageView
 lateinit var smallBtn : ImageButton
 lateinit var mediumBtn : ImageButton
 lateinit var largeBtn : ImageButton
@@ -33,6 +39,7 @@ class MainActivity : AppCompatActivity() {
         ibBrush = findViewById(R.id.ib_brush)
         ibGallery = findViewById(R.id.ib_gallery)
         llPaintColors = findViewById(R.id.ll_paint_colors)
+        ivBackground = findViewById(R.id.iv_background)
 
         drawingView.setBrushSize(20.toFloat())
 
@@ -47,9 +54,37 @@ class MainActivity : AppCompatActivity() {
 
         ibGallery.setOnClickListener{
             if(isStorageReadingAllowed()){
-                // TODO: run our code to get an image from gallery
+
+                val pickPhotoIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+
+                startActivityForResult(pickPhotoIntent, GALLERY)
+
+
+
             } else {
                 requestStoragePermission()
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(resultCode == Activity.RESULT_OK){
+            if(requestCode == GALLERY){
+                try {
+                    if(data!!.data != null){
+                        //setting the user's image as background
+                        ivBackground.visibility = View.VISIBLE
+                        ivBackground.setImageURI(data.data)
+                    } else{
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Error in parsing the image or it's corrupted.",
+                            Toast.LENGTH_SHORT)
+                    }
+                }catch (e: Exception){
+                    e.printStackTrace()
+                }
             }
         }
     }
@@ -137,6 +172,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val STORAGE_PERMISSION_CODE = 1
+        private const val GALLERY = 2
     }
 
 }

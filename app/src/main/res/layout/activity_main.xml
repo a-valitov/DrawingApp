@@ -21,11 +21,11 @@
 
         <!-- The first element of FrameLayout goes to the lowest layer -->
         <ImageView
+            android:id="@+id/iv_background"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_margin="5dp"
             android:contentDescription="background image"
-            android:src="@drawable/image"
             android:scaleType="centerCrop"
                 />
             <com.avalitov.drawingapp.DrawingView
