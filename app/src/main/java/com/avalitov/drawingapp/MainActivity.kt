@@ -20,6 +20,7 @@ import java.lang.Exception
 
 lateinit var drawingView : DrawingView
 lateinit var ibBrush : ImageButton
+lateinit var ibUndo : ImageButton
 lateinit var ibGallery : ImageButton
 lateinit var ivBackground : ImageView
 lateinit var smallBtn : ImageButton
@@ -37,6 +38,7 @@ class MainActivity : AppCompatActivity() {
 
         drawingView = findViewById(R.id.drawing_view)
         ibBrush = findViewById(R.id.ib_brush)
+        ibUndo = findViewById(R.id.ib_undo)
         ibGallery = findViewById(R.id.ib_gallery)
         llPaintColors = findViewById(R.id.ll_paint_colors)
         ivBackground = findViewById(R.id.iv_background)
@@ -54,16 +56,15 @@ class MainActivity : AppCompatActivity() {
 
         ibGallery.setOnClickListener{
             if(isStorageReadingAllowed()){
-
                 val pickPhotoIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-
                 startActivityForResult(pickPhotoIntent, GALLERY)
-
-
-
             } else {
                 requestStoragePermission()
             }
+        }
+
+        ibUndo.setOnClickListener(){
+            drawingView.onClickUndo()
         }
     }
 
