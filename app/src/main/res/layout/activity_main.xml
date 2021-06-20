@@ -208,6 +208,16 @@
             app:layout_constraintBottom_toBottomOf="parent"
             />
 
+        <ImageButton
+            android:id="@+id/ib_save"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/ic_save"
+            android:contentDescription="save image"
+            android:scaleType="fitXY"
+            android:layout_margin="5dp"
+            />
+
     </LinearLayout>
 
 

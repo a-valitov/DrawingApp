@@ -5,27 +5,33 @@ import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.Toast
+import android.widget.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.lang.Exception
 
 lateinit var drawingView : DrawingView
 lateinit var ibBrush : ImageButton
 lateinit var ibUndo : ImageButton
 lateinit var ibGallery : ImageButton
+lateinit var ibSave : ImageButton
 lateinit var ivBackground : ImageView
 lateinit var smallBtn : ImageButton
 lateinit var mediumBtn : ImageButton
 lateinit var largeBtn : ImageButton
+lateinit var flDrawingViewContainer : FrameLayout
 lateinit var llPaintColors : LinearLayout
 
 class MainActivity : AppCompatActivity() {
@@ -40,8 +46,10 @@ class MainActivity : AppCompatActivity() {
         ibBrush = findViewById(R.id.ib_brush)
         ibUndo = findViewById(R.id.ib_undo)
         ibGallery = findViewById(R.id.ib_gallery)
+        ibSave = findViewById(R.id.ib_save)
         llPaintColors = findViewById(R.id.ll_paint_colors)
         ivBackground = findViewById(R.id.iv_background)
+        flDrawingViewContainer = findViewById(R.id.fl_drawing_view_container)
 
         drawingView.setBrushSize(20.toFloat())
 
@@ -66,6 +74,15 @@ class MainActivity : AppCompatActivity() {
         ibUndo.setOnClickListener(){
             drawingView.onClickUndo()
         }
+
+        ibSave.setOnClickListener(){
+            if(isStorageReadingAllowed()){
+                BitmapAsyncTask(getBitmapFromView(flDrawingViewContainer)).execute()
+            } else {
+                requestStoragePermission()
+            }
+        }
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -170,6 +187,86 @@ class MainActivity : AppCompatActivity() {
 
         return (result == PackageManager.PERMISSION_GRANTED)
     }
+
+    private fun getBitmapFromView(view: View) : Bitmap {
+        val returnedBitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(returnedBitmap)
+        val bgDrawable = view.background
+
+        if(bgDrawable != null) {
+            bgDrawable.draw(canvas)
+        } else {
+            canvas.drawColor(Color.WHITE)
+        }
+
+        view.draw(canvas)
+
+        return returnedBitmap
+    }
+
+    private inner class BitmapAsyncTask(val mBitmap: Bitmap): AsyncTask<Any, Void, String>(){
+
+        private lateinit var mProgressDialog: Dialog
+
+        override fun onPreExecute() {
+            super.onPreExecute()
+            showProgressDialog()
+        }
+
+        override fun doInBackground(vararg params: Any?): String {
+            var result = ""
+
+            if(mBitmap != null){
+                try{
+                    //convert the bitmap into PNG and send via stream
+                    val bytes = ByteArrayOutputStream()
+                    mBitmap.compress(Bitmap.CompressFormat.PNG, 90, bytes)
+                    val f = File(externalCacheDir!!.absoluteFile.toString() + File.separator
+                                + "DrawingApp_" + System.currentTimeMillis() / 1000 + ".png")
+                    val fos = FileOutputStream(f)
+                    fos.write(bytes.toByteArray())
+                    fos.close()
+                    result = f.absolutePath
+                }catch (e: Exception){
+                    result = ""
+                    e.printStackTrace()
+                }
+            }
+
+            return result
+        }
+
+        override fun onPostExecute(result: String?) {
+            //super.onPostExecute(result)
+            dismissProgressDialog()
+
+            if(result!!.isNotEmpty()) {
+                Toast.makeText(
+                        this@MainActivity,
+                        "File saved successfully: $result",
+                        Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                Toast.makeText(
+                        this@MainActivity,
+                        "Something went wrong while saving the file.",
+                        Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+        private fun showProgressDialog(){
+            mProgressDialog = Dialog(this@MainActivity)
+            mProgressDialog.setContentView(R.layout.dialog_custom_progess)
+            mProgressDialog.show()
+        }
+
+        private fun dismissProgressDialog(){
+            mProgressDialog.dismiss()
+        }
+
+    }
+
 
     companion object {
         private const val STORAGE_PERMISSION_CODE = 1
